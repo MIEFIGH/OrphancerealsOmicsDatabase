@@ -71,18 +71,30 @@ Replace `<number_of_cores>` with the number of CPU cores you want to use.
 #### Configuration
 The workflows use the following configuration files:
 
-`single.list`: List of single-end SRA files.
-
-`paired.list`: List of paired-end SRA files.
+- `single.list`: List of single-end SRA files.
+- `paired.list`: List of paired-end SRA files.
 
 Ensure these files are correctly generated before running the Snakemake workflows.
 
-Output
+#### Output
 The pipeline generates the following outputs:
 
-BAM files: Sorted BAM files for each SRA file.
+- BAM files: Sorted BAM files for each SRA file.
 
-Count files: Gene expression counts in counts/single/counts_single.txt or counts/pair/counts_pair.txt.
+- Count files: Gene expression counts in `counts/single/counts_single.txt` or `counts/pair/counts_pair.txt`.
 
-Example
+#### Example
 Here is an example of how to run the pipeline:
+```bash
+# Check CSV and directory consistency
+./_01_check.bash /path/to/your/file.csv
+
+# Generate single and paired-end file lists
+./_02_list.sh /path/to/your/file.csv
+
+# Run the Snakemake workflow for single-end data
+snakemake --snakefile snakemake_single.txt --cores 16
+
+# Run the Snakemake workflow for paired-end data
+snakemake --snakefile snakemake.txt --cores 16
+````

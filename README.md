@@ -10,6 +10,7 @@ Before running the pipeline, ensure you have the following installed:
 - **Bash**: For running the shell scripts.
 - **Snakemake**: For executing the workflow.
 - **Python**: Required by Snakemake.
+- **R**: For fpkm tpm calculate.
 - **Bioinformatics tools**:
   - `parallel-fastq-dump`: For converting SRA files to FASTQ format.
   - `fastp`: For quality control of FASTQ files.
@@ -105,3 +106,25 @@ snakemake --snakefile snakemake_single.txt --cores 16
 # Run the Snakemake workflow for paired-end data
 snakemake --snakefile snakemake.txt --cores 16
 ````
+
+#### 4.RPKM and TPM Calculation (fpkm_tpm.R)
+Add it at the beginning of the file:
+
+```bash
+#!/route/miniconda3/envs/R/bin/Rscript
+
+files_in <- "
+/route/RNA/Triticum_durum/G5/counts/pair/counts_pair.txt"
+
+files_out_fpkm <- "
+/route/fpkm/Triticum_durum_G5_pair_fpkm.csv
+"
+files_out_tpm <- "
+/route/tpm/Triticum_durum_G5_pair_tpm.csv
+"
+```
+
+Execute the script using the following command:
+```bash
+./fpkm_tpm.R
+```

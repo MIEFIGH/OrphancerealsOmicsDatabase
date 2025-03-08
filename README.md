@@ -60,13 +60,13 @@ Replace `<number_of_cores>` with the number of CPU cores you want to use.
 
 
 #### Workflow Steps
-1. FastQ File Extraction: Converts SRA files to FASTQ format (commented out in the provided scripts).
+  1. FastQ File Extraction: Converts SRA files to FASTQ format (commented out in the provided scripts).
 
-2. Fastp Quality Control: Performs quality control on the FASTQ files (commented out in the provided scripts).
+  2. Fastp Quality Control: Performs quality control on the FASTQ files (commented out in the provided scripts).
 
-3. HISAT2 Alignment: Aligns the reads to the reference genome (commented out in the provided scripts).
+  3. HISAT2 Alignment: Aligns the reads to the reference genome (commented out in the provided scripts).
 
-4. FeatureCounts: Quantifies gene expression based on the aligned reads.
+  4. FeatureCounts: Quantifies gene expression based on the aligned reads.
 
 #### Configuration
 The workflows use the following configuration files:

@@ -1,0 +1,128 @@
+configfile: "paired.list"
+
+#Define global variables
+genome = ""
+annotation = "gtf"
+work_dir = ""
+ref_basename = os.path.splitext(os.path.basename(genome))[0]
+
+rule all:
+    input:
+        expand("bam/paired/{sra_file}.sorted.bam", sra_file=config["sra_files"]),
+        "counts/pair/counts_pair.txt"
+
+#FastQ file extraction
+rule fastq:
+    input:
+        "sra/{sra_file}"  Ensure the file extension matches the downloaded files
+    output:
+        temp("raw/{sra_file}_1.fastq.gz"),
+        temp("raw/{sra_file}_2.fastq.gz")
+    params:
+        dir = "./raw"
+    threads: 10
+    log:
+        "logs/convert_fastq/{sra_file}.log"
+    shell:
+        """
+        source /public/home/yangfj/miniconda3/bin/activate rnaseq
+        parallel-fastq-dump \
+        -T ./raw \
+        -s {input} \
+        --threads 10 \
+        -O {params.dir} \
+        --split-3 \
+        --gzip \
+        > {log} 2>&1
+        """
+
+#Fastp quality control
+rule fastp_quality_control:
+    input:
+        "raw/{sra_file}_1.fastq.gz",
+        "raw/{sra_file}_2.fastq.gz"
+    output:
+        temp("clean/{sra_file}_1_clean.fastq.gz"),
+        temp("clean/{sra_file}_2_clean.fastq.gz"),
+        "clean/html/{sra_file}.html",
+        "clean/json/{sra_file}.json"
+    log:
+        "logs/fastp/{sra_file}.log"
+    threads: 10
+    shell:
+        """
+        source /public/home/yangfj/miniconda3/bin/activate rnaseq
+        fastp -q 20 -z 4 -u 30 -w 16 \
+            -i {input[0]} \
+            -o {output[0]} \
+            -I {input[1]} \
+            -O {output[1]} \
+            -h {output[2]} \
+            -j {output[3]} \
+            > {log} 2>&1
+        """
+
+
+#HISAT2 index building
+rule HISAT2_index:
+    input:
+        reference_genome = genome
+    output:
+        expand("genome_index/{ref_basename}.{n}.ht2", n=[1,2,3,4,5,6,7,8], ref_basename=ref_basename)  使用静态变量
+    log:
+        f"logs/index/hisat2_index_{ref_basename}.log"  直接使用静态变量
+    shell:
+        """
+        source /public/home/yangfj/miniconda3/bin/activate rnaseq
+        hisat2-build \
+            {input.reference_genome} \
+            genome_index/{ref_basename} \
+            2> {log}
+        """
+
+#HISAT2 alignment
+rule hisat2_mapping:
+    input:
+        "clean/{sra_file}_1_clean.fastq.gz",
+        "clean/{sra_file}_2_clean.fastq.gz",
+        expand("genome_index/{ref_basename}.{n}.ht2", n=[1,2,3,4,5,6,7,8], ref_basename=ref_basename)  静态变量
+    output:
+        "bam/paired/{sra_file}.sorted.bam"
+    params:
+        genome_index = f"{work_dir}/genome_index/{ref_basename}"  静态变量
+    threads: 16
+    log:
+        "logs/hisat/{sra_file}.log"
+    shell:
+        """
+        source /public/home/yangfj/miniconda3/bin/activate rnaseq
+        hisat2 -p 16 \
+            -x {params.genome_index} \
+            -1 {input[0]} \
+            -2 {input[1]} \
+            2>> {log} | samtools sort -@ 16 -o {output} 2>> {log}
+        """
+
+rule featureCounts:
+    input:
+        bam = expand("bam/paired/{sra_file}.sorted.bam", sra_file=config["sra_files"]),
+        gtf = annotation
+    output:
+        "counts/pair/counts_pair.txt"
+    log:
+        "logs/featureCounts/count_pair.log"
+    shell:
+        """
+        source /public/home/yangfj/miniconda3/bin/activate rnaseq
+        featureCounts   -T 16 \
+                        -p \
+                        -B \
+                        -C \
+                        -t exon \
+                        -g gene_id \
+                        -a {input.gtf} \
+                        --countReadPairs \
+                        -o {output} \
+                        {input.bam} \
+                        2>> {log}
+        """

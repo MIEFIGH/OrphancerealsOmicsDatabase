@@ -1,0 +1,100 @@
+configfile: "single.list"
+
+Define global variables
+genome = ""
+annotation = "gtf"
+work_dir = ""
+ref_basename = os.path.splitext(os.path.basename(genome))[0]
+
+rule all:
+    input:
+        expand("bam/single/{sra_file}.sorted.bam", sra_file=config["sra_files"]),
+        "counts/single/counts_single.txt"
+
+# FastQ file extraction
+rule fastq:
+    input:
+        "sra/{sra_file}"  
+    output:
+        temp("raw/{sra_file}.fastq.gz")  单端数据只需一个文件
+    params:
+        dir = "./raw"
+    threads: 10
+    log:
+        "logs/convert_fastq/{sra_file}.log"
+    shell:
+        """
+        source /public/home/yangfj/miniconda3/bin/activate rnaseq
+        parallel-fastq-dump \
+        -T ./raw \
+        -s {input} \
+        --threads 10 \
+        -O {params.dir} \
+        --split-files \
+        --gzip \
+        > {log} 2>&1
+        """
+
+# Fastp quality control
+rule fastp_quality_control:
+    input:
+        "raw/{sra_file}_1.fastq.gz"  
+    output:
+        temp("clean/{sra_file}_clean.fastq.gz"),  
+        "clean/html/{sra_file}.html",
+        "clean/json/{sra_file}.json"
+    log:
+        "logs/fastp/{sra_file}.log"
+    threads: 10
+    shell:
+        """
+        source /public/home/yangfj/miniconda3/bin/activate rnaseq
+        fastp -q 20 -z 4 -u 30 -w 16 \
+            -i {input} \
+            -o {output[0]} \
+            -h {output[1]} \
+            -j {output[2]} \
+            > {log} 2>&1
+        """
+
+
+# HISAT2 alignment
+rule hisat2_mapping:
+    input:
+        "clean/{sra_file}_clean.fastq.gz",  
+        expand("genome_index/{ref_basename}.{n}.ht2", n=[1,2,3,4,5,6,7,8], ref_basename=ref_basename)  静态变量
+    output:
+        "bam/single/{sra_file}.sorted.bam" 
+    params:
+        genome_index = f"{work_dir}/genome_index/{ref_basename}"  静态变量
+    threads: 16
+    log:
+        "logs/hisat/{sra_file}.log"
+    shell:
+        """
+        source /public/home/yangfj/miniconda3/bin/activate rnaseq
+        hisat2 -p 16 \
+            -x {params.genome_index} \
+            -U {input[0]} \
+            2>> {log} | samtools sort -@ 16 -o {output} 2>> {log}
+        """
+
+rule featureCounts:
+    input:
+        bam = expand("bam/single/{sra_file}.sorted.bam", sra_file=config["sra_files"]),
+        gtf = annotation
+    output:
+        "counts/single/counts_single.txt"
+    log:
+        "logs/featureCounts/counts_single.log"
+    shell:
+        """
+        source /public/home/yangfj/miniconda3/bin/activate rnaseq
+            featureCounts   -T 16 \
+                            -t exon \
+                            -g gene_id \
+                            -a {input.gtf} \
+                            -o {output} \
+                            {input.bam} \
+                            2>> {log}
+        """

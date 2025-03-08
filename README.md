@@ -45,8 +45,8 @@ This script will create two files:
 
 The pipeline includes two Snakemake workflows:
 
-`snakemake_single.txt`: For processing single-end data.
-`snakemake.txt`: For processing paired-end data.
+- `snakemake_single.txt`: For processing single-end data.
+- `snakemake.txt`: For processing paired-end data.
 
 To run the workflow, use the following command:
 ```bash

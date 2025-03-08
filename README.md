@@ -48,11 +48,11 @@ The pipeline includes two Snakemake workflows:
 - `snakemake_single.txt`: For processing single-end data.
 - `snakemake.txt`: For processing paired-end data.
 
-
+Add it at the beginning of the file:
 ```python
-genome = "/data/genome.fa"  # 参考基因组的路径
-annotation = "/data/annotation.gtf"  # 注释文件的路径
-work_dir = "/analysis/rna_seq"  # 工作目录的路径
+genome = "/data/genome.fa"  # refgenome
+annotation = "/data/annotation.gtf"  # gtf file
+work_dir = "/analysis/rna_seq"  # workdir
 ```
 
 To run the workflow, use the following command:

@@ -128,3 +128,61 @@ Execute the script using the following command:
 ```bash
 ./fpkm_tpm.R
 ```
+
+
+
+## SNP Calling Pipeline
+
+This repository contains a set of scripts and Snakemake workflows for processing sequencing data, including quality control, alignment, and SNP calling. The pipeline supports both **single-end** and **paired-end** sequencing data.
+
+---
+
+### Prerequisites
+
+Before running the pipeline, ensure the following tools are installed:
+
+- **Bash**: For running shell scripts.
+- **Snakemake**: For workflow management.
+- **Python**: Required by Snakemake.
+- **Bioinformatics tools**:
+  - `parallel-fastq-dump`: For converting SRA files to FASTQ format.
+  - `fastp`: For quality control of FASTQ files.
+  - `bwa`: For aligning reads to a reference genome.
+  - `samtools`: For manipulating BAM files and calculating coverage/flagstat.
+  - `samtools index`: For indexing BAM files.
+
+---
+
+### Pipeline Overview
+
+The pipeline consists of the following steps:
+
+1. **Convert SRA to FASTQ**:
+   - Converts SRA files to FASTQ format using `parallel-fastq-dump`.
+
+2. **Quality Control**:
+   - Trims and filters reads using `fastp`.
+
+3. **Alignment**:
+   - Aligns reads to a reference genome using `bwa mem`.
+
+4. **BAM Processing**:
+   - Sorts and indexes BAM files using `samtools`.
+
+5. **Coverage and Flagstat**:
+   - Calculates coverage and flagstat metrics using `samtools coverage` and `samtools flagstat`.
+
+6. **Chromosome List Extraction**:
+   - Extracts chromosome names from the reference genome.
+
+---
+
+### Usage
+
+#### 1. Checking CSV and Directory Consistency
+
+Before running the pipeline, check if the SRA numbers in the CSV file match the files in the directory using the `_01_check.bash` script:
+
+```bash
+./_01_check.bash /path/to/your/file.csv
+```

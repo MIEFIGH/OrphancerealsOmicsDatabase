@@ -38,8 +38,8 @@ The `_02_list.sh` script processes a CSV file to generate lists of single-end an
 
 This script will create two files:
 
-`single.list`: Contains the list of single-end SRA files.
-`paired.list`: Contains the list of paired-end SRA files.
+- `single.list`: Contains the list of single-end SRA files.
+- `paired.list`: Contains the list of paired-end SRA files.
 
 #### 3. Running the Snakemake Workflow
 
@@ -60,13 +60,13 @@ Replace `<number_of_cores>` with the number of CPU cores you want to use.
 
 
 #### Workflow Steps
-FastQ File Extraction: Converts SRA files to FASTQ format (commented out in the provided scripts).
+1. FastQ File Extraction: Converts SRA files to FASTQ format (commented out in the provided scripts).
 
-Fastp Quality Control: Performs quality control on the FASTQ files (commented out in the provided scripts).
+2. Fastp Quality Control: Performs quality control on the FASTQ files (commented out in the provided scripts).
 
-HISAT2 Alignment: Aligns the reads to the reference genome (commented out in the provided scripts).
+3. HISAT2 Alignment: Aligns the reads to the reference genome (commented out in the provided scripts).
 
-FeatureCounts: Quantifies gene expression based on the aligned reads.
+4. FeatureCounts: Quantifies gene expression based on the aligned reads.
 
 #### Configuration
 The workflows use the following configuration files:

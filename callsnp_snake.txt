@@ -1,0 +1,116 @@
+#配置文件
+configfile:".yaml"
+
+ref = None  
+
+#目标文件
+rule all:
+    input:
+        expand("mapping/{sample}.sorted.bam",sample=config["sample"]),
+        expand("mapping/{sample}.sorted.bam.bai",sample=config["sample"]),
+        expand("coverage_flagstat/{sample}.coverage",sample=config["sample"]),
+        expand("coverage_flagstat/{sample}.flagstat",sample=config["sample"]),
+        "chr.list"		
+        
+# 加载配置文件并设置 ref 变量
+
+ref = config["ref"]
+
+        
+rule convert_fastq:
+    input:
+        "sra/{sample}"
+    output:
+        temp("raw_data/{sample}_1.fastq.gz"),
+        temp("raw_data/{sample}_2.fastq.gz")
+    params:
+        dir=r"./raw_data"
+    threads:10
+    log:
+        "logs/covert_fastq/{sample}.log"
+    shell:
+        "parallel-fastq-dump \
+        -T ./raw \
+        -s {input} \
+        --threads 10 \
+        -O {params} \
+        --split-3 \
+        --gzip \
+        > {log} 2>&1"
+    
+
+rule fastp:
+    input:
+        "raw_data/{sample}_1.fastq.gz",
+        "raw_data/{sample}_2.fastq.gz"
+    output:
+        temp("clean_data/{sample}.1_clean.fq.gz"),
+        temp("clean_data/{sample}.2_clean.fq.gz"),
+        "clean_data/{sample}.fastp.html"
+    threads:10
+    log:
+        "logs/fastp/{sample}.log"
+    shell:
+        "fastp \
+        --thread 6 \
+        -i {input[0]} \
+        -I {input[1]} \
+        -o {output[0]} \
+        -O {output[1]} \
+        -h {output[2]} \
+        > {log} 2>&1"
+
+rule bwa_map:
+    input:
+        "clean_data/{sample}.1_clean.fq.gz",
+        "clean_data/{sample}.2_clean.fq.gz",
+        index_1=f"{ref}.amb",
+        index_2=f"{ref}.ann",
+        #index_3=f"{ref}.bwt",
+        index_4=f"{ref}.pac",
+        #index_5=f"{ref}.sa"
+    output:
+        "mapping/{sample}.sorted.bam"
+    threads:40
+    params:
+        rg=r"@RG\tID:{sample}\tSM:{sample}\tLB:{sample}\tPL:ILLUMINA"
+    log:
+        "logs/bwa_map_{sample}.log"
+    shell:
+        "bwa mem \
+        -R '{params.rg}' \
+        -t {threads} \
+        {ref} {input[0]} {input[1]}| \
+        samtools sort -@ 4 -m 4G -o {output} \
+        > {log} 2>&1"
+
+
+rule ExtractChromosomeList:
+    input:
+        reference_genome=f"{ref}"
+    output:
+        "chr.list"
+    shell:
+        "grep '^>' {input.reference_genome} | cut -f 1 | sed 's/>//g' > {output}"
+		
+rule bai_index:
+    input:
+        "mapping/{sample}.sorted.bam"
+    threads:5
+    output:
+        "mapping/{sample}.sorted.bam.bai"
+    shell:
+        "samtools index {input}"
+
+rule coverage_flagstat:
+    input:
+        "mapping/{sample}.sorted.bam"	  
+    output:
+        "coverage_flagstat/{sample}.coverage",
+        "coverage_flagstat/{sample}.flagstat"
+    threads:5
+    shell:
+        """
+        samtools coverage {input} > {output[0]}
+        samtools flagstat {input} > {output[1]}
+        """        

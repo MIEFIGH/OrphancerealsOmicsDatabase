@@ -150,6 +150,7 @@ Before running the pipeline, ensure the following tools are installed:
   - `bwa`: For aligning reads to a reference genome.
   - `samtools`: For manipulating BAM files and calculating coverage/flagstat.
   - `samtools index`: For indexing BAM files.
+  - `gatk`: For creating sequence dictionaries.
 
 ---
 
@@ -157,32 +158,111 @@ Before running the pipeline, ensure the following tools are installed:
 
 The pipeline consists of the following steps:
 
-1. **Convert SRA to FASTQ**:
+1. **Reference Genome Indexing**:
+   - Builds BWA and samtools indexes for the reference genome.
+   - Creates a sequence dictionary using GATK.
+
+2. **Convert SRA to FASTQ**:
    - Converts SRA files to FASTQ format using `parallel-fastq-dump`.
 
-2. **Quality Control**:
+3. **Quality Control**:
    - Trims and filters reads using `fastp`.
 
-3. **Alignment**:
+4. **Alignment**:
    - Aligns reads to a reference genome using `bwa mem`.
 
-4. **BAM Processing**:
+5. **BAM Processing**:
    - Sorts and indexes BAM files using `samtools`.
 
-5. **Coverage and Flagstat**:
+6. **Coverage and Flagstat**:
    - Calculates coverage and flagstat metrics using `samtools coverage` and `samtools flagstat`.
 
-6. **Chromosome List Extraction**:
+7. **Chromosome List Extraction**:
    - Extracts chromosome names from the reference genome.
 
 ---
 
 ### Usage
 
-#### 1. Checking CSV and Directory Consistency
+#### 1. Reference Genome Indexing
 
+Before running the pipeline, you need to build indexes for the reference genome. The `_03_index.snake.txt` script automates this process.
+
+##### Input
+
+- A list of reference genome files (`fasta.list`), where each line contains the path to a reference genome file (e.g., `/path/to/reference_genome.fa`).
+
+##### Running the Indexing Workflow
+
+1. Create a `fasta.list` file with the paths to your reference genome files:
+   ```bash
+   echo "/path/to/reference_genome.fa" > fasta.list
+    ```
+2. Run the Snakemake workflow to build the indexes:
+   ```bash
+   snakemake --snakefile _03_index.snake.txt --cores <number_of_cores>
+    ```
+This will generate the following index files for each reference genome:
+
+BWA indexes: `.amb`, `.ann`, `.bwt`, `.pac`, `.sa`
+
+samtools index: `.fai`
+
+GATK sequence dictionary: `.dict`
+#### 2. Checking CSV and Directory Consistency
 Before running the pipeline, check if the SRA numbers in the CSV file match the files in the directory using the `_01_check.bash` script:
+  ````bash
+  ./_01_check.bash /path/to/your/file.csv
+  ````
+This script will output:
 
-```bash
-./_01_check.bash /path/to/your/file.csv
-```
+- SRA numbers in the CSV file that are missing in the directory.
+- SRA numbers in the directory that are not in the CSV file.
+
+#### 3. Generating Single and Paired-End File Lists
+The `_02_list.sh` script processes a CSV file to generate lists of single-end and paired-end SRA files:
+  ````bash
+  ./_02_list.sh /path/to/your/file.csv
+  ````
+#### 4. Running the Snakemake Workflow
+The pipeline includes two Snakemake workflows:
+
+- callsnp_snake.txt: For processing paired-end data.
+- callsnp_snake_single.txt: For processing single-end data.
+
+##### Configuration
+Before running the workflow, ensure the following variables are set in the configuration file (`.yaml`):
+````yaml
+ref: "/path/to/reference_genome.fa"  # Path to the reference genome
+sample:  # List of sample names
+  - sample1
+  - sample2
+````
+##### Running the Workflow
+For paired-end data:
+````bash
+snakemake --snakefile callsnp_snake.txt --cores <number_of_cores>
+````
+For single-end data:
+````bash
+snakemake --snakefile callsnp_snake_single.txt --cores <number_of_cores>
+````
+
+##### Output Files
+The pipeline generates the following outputs:
+
+- Index files:
+
+  - BWA indexes: .amb, .ann, .bwt, .pac, .sa
+
+ - samtools index: .fai
+
+ - GATK sequence dictionary: .dict
+
+- BAM files: Sorted and indexed BAM files for each sample.
+
+- Coverage files: Coverage statistics for each sample.
+
+- Flagstat files: Alignment statistics for each sample.
+
+- Chromosome list: A list of chromosome names from the reference genome.

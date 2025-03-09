@@ -255,9 +255,9 @@ The pipeline generates the following outputs:
 
   - BWA indexes: .amb, .ann, .bwt, .pac, .sa
 
- - samtools index: .fai
+  - samtools index: .fai
 
- - GATK sequence dictionary: .dict
+  - GATK sequence dictionary: .dict
 
 - BAM files: Sorted and indexed BAM files for each sample.
 
@@ -266,3 +266,20 @@ The pipeline generates the following outputs:
 - Flagstat files: Alignment statistics for each sample.
 
 - Chromosome list: A list of chromosome names from the reference genome.
+
+#### 4.GATK
+##### Prerequisites
+- bam.list: a file with bam file route
+- perl file: need to change the refgenome and chromosome name
+##### Usage:
+1. get bam.list
+````bash
+   find /route/mapping | grep "bam" | grep -v "bai" > bam.list
+````
+2. change the refgenome and chromosome name in `2_genotyping_pipeline.pl`
+  
+
+5. run perl script
+   ````bash
+   /usr/bin/perl 2_genotyping_pipeline.pl PRJNA791522_bam.list
+   ````

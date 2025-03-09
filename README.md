@@ -107,7 +107,7 @@ snakemake --snakefile snakemake_single.txt --cores 16
 snakemake --snakefile snakemake.txt --cores 16
 ````
 
-#### 4.RPKM and TPM Calculation (fpkm_tpm.R)
+#### 4.RPKM and TPM Calculation (fpkm_tpm.R created by Luoyingting)
 Add it at the beginning of the file:
 
 ```bash

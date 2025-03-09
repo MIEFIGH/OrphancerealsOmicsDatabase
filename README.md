@@ -270,7 +270,7 @@ The pipeline generates the following outputs:
 #### 4.GATK
 ##### Prerequisites
 - bam.list: a file with bam file route
-- perl file(cited ): need to change the refgenome and chromosome name 
+- perl file(cited from https://github.com/dongyawu/Vavilovian_mimicry/tree/master/VarianceCalling_pipeline): need to change the refgenome and chromosome name 
 ##### Usage:
 1. get bam.list
 ````bash

@@ -17,9 +17,9 @@ files_out_tpm <- unlist(strsplit(files_out_tpm, "\n"))
 for (i in 1:10){
 	path <- file_in[i]
 	count <- read.table(path, header = T,sep="\t")
-	rownames(count) <- count[ ,1] #将第一列作为列名
-	count <- count[ ,-1]          #删除第一列，因为第一列已经作为列名了，不删除的话第一列和列名就重复了
-	count <- count[ ,5:ncol(count)]  #只选第5列到最后一列，其实就是exon长度列和比对到的个数列
+	rownames(count) <- count[ ,1]
+	count <- count[ ,-1]         
+	count <- count[ ,5:ncol(count)]  
 
 	# TPM
 	kb <- count[,1] / 1000

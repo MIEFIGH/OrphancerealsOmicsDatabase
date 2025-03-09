@@ -270,7 +270,7 @@ The pipeline generates the following outputs:
 #### 4.GATK
 ##### Prerequisites
 - bam.list: a file with bam file route
-- perl file: need to change the refgenome and chromosome name
+- perl file(cited ): need to change the refgenome and chromosome name 
 ##### Usage:
 1. get bam.list
 ````bash
@@ -281,5 +281,5 @@ The pipeline generates the following outputs:
 
 5. run perl script
    ````bash
-   /usr/bin/perl 2_genotyping_pipeline.pl PRJNA791522_bam.list
+   /usr/bin/perl 2_genotyping_pipeline.pl bam.list
    ````
